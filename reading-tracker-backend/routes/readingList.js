@@ -16,9 +16,19 @@ router.post('/', userController.addBookToReadingList);
 // @access  Private
 router.get('/', userController.getReadingList);
 
+// @route   GET api/reading-list/:listItemId
+// @desc    Get a single item from the user's reading list
+// @access  Private
+router.get('/:listItemId', userController.getReadingListItem);
+
 // @route   PUT api/reading-list/:listItemId
 // @desc    Update an item in the user's reading list
 // @access  Private
 router.put('/:listItemId', userController.updateReadingListItem);
+
+// @route   DELETE api/reading-list/:listItemId
+// @desc    Delete an item from the user's reading list
+// @access  Private
+router.delete('/:listItemId', userController.deleteReadingListItem);
 
 module.exports = router; 

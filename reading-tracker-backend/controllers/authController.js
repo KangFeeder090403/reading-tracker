@@ -27,7 +27,7 @@ exports.register = async (req, res) => {
     const user = await User.create({
       username,
       email,
-      password_hash: password
+      password_hash: password // Pass the plain password, the hook will hash it
     })
 
     const token = generateToken(user.id)
@@ -65,7 +65,16 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' })
     }
 
-    const token = generateToken(user.id)
+    // Sign a JWT
+    const payload = {
+      userId: user.id // Match the key used in the auth middleware
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
     res.json({
       message: 'Login successful',
@@ -92,5 +101,23 @@ exports.getProfile = async (req, res) => {
   } catch (error) {
     console.error('Get profile error:', error)
     res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+exports.getUserProfile = async (req, res) => {
+  try {
+    // req.user is attached by the auth middleware
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'username', 'email', 'createdAt'] // Exclude password
+    })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    res.json(user)
+  } catch (error) {
+    console.error('Get profile error:', error)
+    res.status(500).json({ message: 'Server error' })
   }
 } 

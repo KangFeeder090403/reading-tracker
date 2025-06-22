@@ -74,6 +74,42 @@ exports.getReadingList = async (req, res) => {
   }
 };
 
+exports.getReadingListItem = async (req, res) => {
+    try {
+        const { listItemId } = req.params;
+        const userId = req.user.id;
+
+        const listItem = await UserReadingList.findOne({
+            where: {
+                id: listItemId,
+                user_id: userId
+            },
+            include: [Book]
+        });
+
+        if (!listItem) {
+            return res.status(404).json({ message: "Book not found in your reading list." });
+        }
+        
+        // Flatten the response
+        const response = {
+            id: listItem.id,
+            status: listItem.status,
+            google_books_id: listItem.Book.google_books_id,
+            title: listItem.Book.title,
+            author: listItem.Book.author,
+            description: listItem.Book.description,
+            cover_image_url: listItem.Book.cover_image_url,
+        }
+
+        res.json(response);
+
+    } catch (error) {
+        console.error('Error fetching reading list item:', error);
+        res.status(500).json({ message: 'Server error while fetching book details.' });
+    }
+};
+
 exports.updateReadingListItem = async (req, res) => {
   try {
     const { listItemId } = req.params;
@@ -114,4 +150,27 @@ exports.updateReadingListItem = async (req, res) => {
     console.error('Update item error:', error);
     res.status(500).json({ message: 'Failed to update reading list item.' });
   }
-}; 
+};
+
+exports.deleteReadingListItem = async (req, res) => {
+  try {
+    const { listItemId } = req.params;
+    const userId = req.user.id;
+
+    const item = await UserReadingList.findOne({
+      where: { id: listItemId, user_id: userId },
+    });
+
+    if (!item) {
+      return res.status(404).json({ message: 'Reading list item not found.' });
+    }
+
+    await item.destroy();
+
+    res.status(200).json({ message: 'Book removed from your list successfully.' });
+
+  } catch (error) {
+    console.error('Delete item error:', error);
+    res.status(500).json({ message: 'Failed to remove book from reading list.' });
+  }
+};
