@@ -150,7 +150,7 @@ exports.updateReadingListItem = async (req, res) => {
     console.error('Update item error:', error);
     res.status(500).json({ message: 'Failed to update reading list item.' });
   }
-};
+}; 
 
 exports.deleteReadingListItem = async (req, res) => {
   try {
