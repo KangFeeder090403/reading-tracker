@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global tweaks */
+:root {
+  color-scheme: dark;
+  --rt-font-base: 16px;
+}
+html { font-size: var(--rt-font-base); }
+
+/* Theme presets */
+:root.theme-light body {
+  background: #f6f7f9;
+}
+:root.theme-light .card { @apply bg-white/90 border-gray-200; }
+:root.theme-light .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-500; }
+:root.theme-light .btn-gold { @apply bg-yellow-500 text-black hover:bg-yellow-400; }
+
+:root.theme-hc body { background: #000; }
+:root.theme-hc .card { @apply bg-black border-white; }
+:root.theme-hc .btn, :root.theme-hc .input { @apply border-2 border-white; }
+:root.theme-hc .title-vamp { @apply text-white drop-shadow-none; }
+
+/* Existing vampire vibe */
+body {
+  background-image: radial-gradient(800px 400px at 0% 0%, rgba(94,37,52,0.22), transparent), radial-gradient(800px 400px at 100% 100%, rgba(39,60,75,0.18), transparent);
+}
+
+/*******************
+ Animations & Effects
+*******************/
+.fog-layer {
+  pointer-events: none;
+  position: fixed; inset: 0;
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(174,62,195,0.10), transparent),
+              radial-gradient(900px 400px at 110% 110%, rgba(180,137,5,0.08), transparent),
+              radial-gradient(800px 300px at 50% 50%, rgba(0,0,0,0.35), transparent);
+  opacity: 0;
+  transition: opacity 500ms ease-in-out;
+  z-index: 120;
+}
+.fog-layer.show { opacity: 1; }
+
+.vamp-fade-enter { opacity: 0; transform: scale(0.99); }
+.vamp-fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms ease, transform 300ms ease; }
+
+/*******************
+ Components
+*******************/
+.btn { @apply px-4 py-2 rounded-md font-ui tracking-wide shadow-frame transition-colors duration-200; }
+.btn-primary { @apply bg-accent-amethyst/25 text-accent-amethyst hover:bg-accent-amethyst hover:text-base-dark; }
+.btn-gold { @apply bg-accent-dullgold/20 text-accent-dullgold hover:bg-accent-dullgold hover:text-base-dark; }
+.card { @apply bg-base-purple/40 border border-accent-dullgold/30 rounded-xl backdrop-blur-sm shadow-frame; }
+.input { @apply bg-base-dark/60 border border-base-blue/30 rounded-md px-3 py-2 placeholder:text-base-light/60 focus:outline-none focus:ring-2 focus:ring-accent-amethyst/50; }
+.label { @apply font-ui text-sm text-base-light/80; }
+.title-vamp { @apply font-gothic text-4xl md:text-5xl text-accent-dullgold drop-shadow-[0_0_6px_rgba(180,137,5,0.35)]; }
+
+hr.decor { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,137,5,0.55), transparent); margin: 1rem 0; }
+
+/* Mobile compact helpers */
+@media (max-width: 480px) {
+  .compact-hidden { display: none !important; }
+  .compact-grid { grid-template-columns: 1fr !important; }
+  .btn { @apply px-3 py-2; }
+  .input { @apply px-2 py-2; }
+}
+
+/* Focus styles for keyboard navigation */
+:focus-visible { outline: 2px dashed #b48905; outline-offset: 2px; }
