@@ -18,39 +18,29 @@ export default async function Dashboard() {
     </header>
 
     <section class="card p-4">
-      <h2 class="font-ui text-lg mb-2">Statistik Koleksi</h2>
-      <div class="h-[220px]">
-        <canvas id="chart"></canvas>
-      </div>
-    </section>
-
-    <section class="card p-4">
-      <h2 class="font-ui text-lg mb-1">Timeline Membaca</h2>
-      <p class="text-xs text-base-light/60 mb-2">Semakin panjang bar, semakin lama durasinya.</p>
-      <div class="flex flex-wrap items-center gap-2 mb-3" id="tl_controls">
-        <label class="text-xs text-base-light/80 flex items-center gap-1">
-          <input id="tl_only_completed" type="checkbox" class="accent-[#ae3ec3]">
-          Hanya "completed"
-        </label>
-        <select id="tl_sort" class="input w-44 text-xs">
-          <option value="desc">Durasi: Terlama dulu</option>
-          <option value="asc">Durasi: Tercepat dulu</option>
-          <option value="title">Judul: A → Z</option>
-        </select>
-        <label class="text-xs text-base-light/80 flex items-center gap-1">
-          <input id="tl_stacked" type="checkbox" class="accent-[#ae3ec3]">
-          Stacked by status
-        </label>
-      </div>
-      <div>
-        <canvas id="timelineChart"></canvas>
+      <div class="flex flex-wrap items-center gap-2 justify-between">
+        <div class="flex items-center gap-2">
+          <button id="viewGrid" class="btn btn-primary text-xs">Grid</button>
+          <button id="viewList" class="btn text-xs">List</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="sortBy" class="input w-44 text-xs">
+            <option value="title">Judul (A→Z)</option>
+            <option value="rating">Rating</option>
+            <option value="progress">Progress</option>
+            <option value="updated">Terakhir diubah</option>
+          </select>
+        </div>
       </div>
     </section>
 
     <section class="card p-4">
       <div class="grid md:grid-cols-3 gap-3">
         <div class="md:col-span-2 flex flex-wrap md:flex-row md:items-center gap-3">
-          <input id="filter" class="input flex-1" placeholder="Filter judul atau penulis..." />
+          <div class="relative flex-1">
+            <input id="filter" class="input w-full" placeholder="Filter judul atau penulis..." />
+            <div id="typeahead" class="absolute left-0 right-0 top-full z-20 hidden bg-base-dark/80 border border-base-blue/30 rounded-md max-h-56 overflow-y-auto"></div>
+          </div>
           <select id="status" class="input w-full md:w-52">
             <option value="">Semua Status</option>
             <option value="planned">Planned</option>
@@ -81,6 +71,53 @@ export default async function Dashboard() {
           </div>
           <div id="catList" class="mt-2 flex flex-wrap gap-2 text-xs"></div>
         </div>
+      </div>
+      <div id="activeChips" class="mt-3 flex flex-wrap gap-2"></div>
+      <div class="mt-3 hidden" id="bulkBar">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="text-xs text-base-light/70"><span id="bulkCount">0</span> dipilih</div>
+          <select id="bulkStatus" class="input w-40 text-xs">
+            <option value="">Ubah status…</option>
+            <option value="planned">Planned</option>
+            <option value="reading">Reading</option>
+            <option value="completed">Completed</option>
+            <option value="on-hold">On Hold</option>
+            <option value="dropped">Dropped</option>
+          </select>
+          <button id="bulkCat" class="btn btn-primary text-xs">Tambah ke Kategori…</button>
+          <button id="bulkDelete" class="btn btn-primary text-xs">Hapus</button>
+          <button id="bulkClear" class="btn text-xs">Batal Pilih</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card p-4">
+      <h2 class="font-ui text-lg mb-2">Statistik Koleksi</h2>
+      <div class="h-[220px]">
+        <canvas id="chart"></canvas>
+      </div>
+    </section>
+
+    <section class="card p-4">
+      <h2 class="font-ui text-lg mb-1">Timeline Membaca</h2>
+      <p class="text-xs text-base-light/60 mb-2">Semakin panjang bar, semakin lama durasinya.</p>
+      <div class="flex flex-wrap items-center gap-2 mb-3" id="tl_controls">
+        <label class="text-xs text-base-light/80 flex items-center gap-1">
+          <input id="tl_only_completed" type="checkbox" class="accent-[#ae3ec3]">
+          Hanya "completed"
+        </label>
+        <select id="tl_sort" class="input w-44 text-xs">
+          <option value="desc">Durasi: Terlama dulu</option>
+          <option value="asc">Durasi: Tercepat dulu</option>
+          <option value="title">Judul: A → Z</option>
+        </select>
+        <label class="text-xs text-base-light/80 flex items-center gap-1">
+          <input id="tl_stacked" type="checkbox" class="accent-[#ae3ec3]">
+          Stacked by status
+        </label>
+      </div>
+      <div>
+        <canvas id="timelineChart"></canvas>
       </div>
     </section>
 
@@ -130,6 +167,25 @@ export default async function Dashboard() {
   const categorySelect = container.querySelector('#category')
   const catList = container.querySelector('#catList')
 
+  // View & sort
+  let viewMode = localStorage.getItem('rt_view') || 'grid'
+  const btnGrid = container.querySelector('#viewGrid')
+  const btnList = container.querySelector('#viewList')
+  const sortByEl = container.querySelector('#sortBy')
+
+  // Typeahead
+  const filterEl = container.querySelector('#filter')
+  const typeaheadEl = container.querySelector('#typeahead')
+
+  // Bulk select
+  const bulkBar = container.querySelector('#bulkBar')
+  const bulkCountEl = container.querySelector('#bulkCount')
+  const bulkStatusEl = container.querySelector('#bulkStatus')
+  const bulkCatBtn = container.querySelector('#bulkCat')
+  const bulkDeleteBtn = container.querySelector('#bulkDelete')
+  const bulkClearBtn = container.querySelector('#bulkClear')
+  let selectedIds = new Set()
+
   // Timeline controls
   const tlOnlyCompletedEl = container.querySelector('#tl_only_completed')
   const tlSortEl = container.querySelector('#tl_sort')
@@ -139,12 +195,34 @@ export default async function Dashboard() {
   const ratingMinEl = container.querySelector('#ratingMin')
   const fuzzyEl = container.querySelector('#fuzzy')
 
-  // Hold Chart.js instances
   let chartInstance = null
   let timelineInstance = null
-
-  // Remember last loaded books for timeline re-render
   let lastBooks = []
+
+  function updateChips() {
+    const chips = []
+    const s = container.querySelector('#status').value
+    const r = ratingMinEl.value
+    const c = categorySelect.value
+    const q = (filterEl.value || '').trim()
+    if (q) chips.push(`<span class=\"px-2 py-1 rounded border border-base-blue/30\">Query: ${q}</span>`)
+    if (s) chips.push(`<span class=\"px-2 py-1 rounded border border-base-blue/30\">Status: ${s}</span>`)
+    if (r) chips.push(`<span class=\"px-2 py-1 rounded border border-base-blue/30\">Rating: ${r}+</span>`)
+    if (c) chips.push(`<span class=\"px-2 py-1 rounded border border-base-blue/30\">Kategori</span>`)
+    const wrap = container.querySelector('#activeChips')
+    wrap.innerHTML = chips.join(' ')
+    const clearBtn = document.createElement('button')
+    clearBtn.className = 'btn btn-primary text-xs'
+    clearBtn.textContent = 'Clear all'
+    clearBtn.addEventListener('click', () => {
+      filterEl.value = ''; container.querySelector('#status').value = ''; ratingMinEl.value=''; categorySelect.value=''; load()
+    })
+    wrap.appendChild(clearBtn)
+  }
+
+  btnGrid.addEventListener('click', () => { viewMode='grid'; localStorage.setItem('rt_view','grid'); renderList(lastBooks) })
+  btnList.addEventListener('click', () => { viewMode='list'; localStorage.setItem('rt_view','list'); renderList(lastBooks) })
+  sortByEl.addEventListener('change', () => { renderList(lastBooks) })
 
   async function loadCategories() {
     const selectedBefore = categorySelect.value
@@ -189,6 +267,7 @@ export default async function Dashboard() {
     if (cat) params.category_id = cat
     const { data } = await api.get('/books', { params })
     lastBooks = data
+    updateChips()
     renderList(data)
     await renderStatsCards(data)
     renderChart(data)
@@ -197,14 +276,30 @@ export default async function Dashboard() {
     renderRecommendations()
   }
 
+  function buildSuggestions(items) {
+    const set = new Set()
+    items.forEach(b => { String(b.title||'').split(/\s+/).forEach(w => set.add(w)); String(b.authors||'').split(/[,\s]+/).forEach(w => set.add(w)) })
+    return Array.from(set).filter(Boolean).slice(0,200)
+  }
+
+  function showTypeahead(items, query) {
+    if (!query) { typeaheadEl.classList.add('hidden'); typeaheadEl.innerHTML=''; return }
+    const suggestions = items
+      .map(b => [b.title, b.authors].filter(Boolean).join(' '))
+      .filter(t => t.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 10)
+    if (!suggestions.length) { typeaheadEl.classList.add('hidden'); typeaheadEl.innerHTML=''; return }
+    typeaheadEl.innerHTML = suggestions.map(s => `<div class=\"px-3 py-2 hover:bg-base-dark/60 cursor-pointer\">${s}</div>`).join('')
+    typeaheadEl.classList.remove('hidden')
+    typeaheadEl.querySelectorAll('div').forEach(div => div.addEventListener('click', () => { filterEl.value = div.textContent; typeaheadEl.classList.add('hidden'); load() }))
+  }
+
   function isSubsequence(needle, hay) {
     needle = needle.toLowerCase()
     hay = hay.toLowerCase()
     if (!needle) return true
     let i = 0
-    for (let c of hay) {
-      if (c === needle[i]) { i++; if (i === needle.length) return true }
-    }
+    for (let c of hay) { if (c === needle[i]) { i++; if (i === needle.length) return true } }
     return false
   }
   function isFuzzyMatch(query, text) {
@@ -213,13 +308,23 @@ export default async function Dashboard() {
     return tokens.every(t => isSubsequence(t, (text||'').toLowerCase()))
   }
 
+  function sortItems(items) {
+    const key = sortByEl.value
+    const copy = items.slice()
+    if (key === 'title') copy.sort((a,b)=> String(a.title).localeCompare(String(b.title)))
+    else if (key === 'rating') copy.sort((a,b)=> (Number(b.rating||0) - Number(a.rating||0)))
+    else if (key === 'progress') copy.sort((a,b)=> (Number(b.current_page||0) - Number(a.current_page||0)))
+    else if (key === 'updated') copy.sort((a,b)=> new Date(b.updated_at||b.end_date||b.start_date||0) - new Date(a.updated_at||a.end_date||a.start_date||0))
+    return copy
+  }
+
   function renderList(items) {
-    const q = container.querySelector('#filter').value
+    const q = filterEl.value
     const s = container.querySelector('#status').value
     const ratingMin = Number(ratingMinEl?.value || 0)
     const useFuzzy = !!fuzzyEl?.checked
 
-    const filtered = items.filter(b => {
+    let filtered = items.filter(b => {
       const hay = [b.title, b.authors, b.tags, b.series].filter(Boolean).join(' ')
       const hit = useFuzzy ? isFuzzyMatch(q, hay) : hay.toLowerCase().includes((q||'').toLowerCase())
       const statusOk = s ? b.status === s : true
@@ -227,16 +332,27 @@ export default async function Dashboard() {
       return hit && statusOk && ratingOk
     })
 
+    filtered = sortItems(filtered)
+
+    listEl.className = viewMode==='grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-3' : 'space-y-3'
     listEl.innerHTML = ''
     if (!filtered.length) {
       listEl.innerHTML = '<div class="text-base-light/60">Belum ada data. Tambahkan buku dengan tombol di kanan atas.</div>'
       return
     }
-    filtered.forEach(b => {
-      listEl.appendChild(BookCard(b, (id) => {
-        window.location.hash = `#/book/${id}`
-      }))
+
+    const renderCard = (b) => BookCard(b, (id) => { window.location.hash = `#/book/${id}` }, {
+      selectable: true,
+      selected: selectedIds.has(b.id),
+      onSelectToggle: (id, checked) => {
+        if (checked) selectedIds.add(id); else selectedIds.delete(id)
+        bulkCountEl.textContent = String(selectedIds.size)
+        bulkBar.classList.toggle('hidden', selectedIds.size===0)
+      }
     })
+
+    filtered.forEach(b => { listEl.appendChild(renderCard(b)) })
+    showTypeahead(filtered, q)
   }
 
   async function renderStatsCards(items) {
@@ -551,27 +667,20 @@ export default async function Dashboard() {
   }
 
   // Filters and events
-  container.querySelector('#filter').addEventListener('input', load)
-  container.querySelector('#status').addEventListener('change', load)
-  categorySelect.addEventListener('change', load)
-  ratingMinEl?.addEventListener('change', load)
-  fuzzyEl?.addEventListener('change', load)
+  container.querySelector('#filter').addEventListener('input', () => { showTypeahead(lastBooks, filterEl.value); updateChips(); renderList(lastBooks) })
+  container.querySelector('#status').addEventListener('change', () => { updateChips(); renderList(lastBooks) })
+  categorySelect.addEventListener('change', () => { updateChips(); load() })
+  ratingMinEl?.addEventListener('change', () => { updateChips(); renderList(lastBooks) })
+  fuzzyEl?.addEventListener('change', () => { renderList(lastBooks) })
+
   tlOnlyCompletedEl?.addEventListener('change', () => renderTimeline(lastBooks))
   tlSortEl?.addEventListener('change', () => renderTimeline(lastBooks))
   tlStackedEl?.addEventListener('change', () => renderTimeline(lastBooks))
 
-  container.querySelector('#saveChallenge').addEventListener('click', async () => {
-    const payload = {
-      target_books: Number(container.querySelector('#ch_books').value||0),
-      target_pages: Number(container.querySelector('#ch_pages').value||0),
-      start_date: container.querySelector('#ch_start').value,
-      end_date: container.querySelector('#ch_end').value,
-    }
-    if (!payload.start_date || !payload.end_date) return
-    await api.post('/challenges', payload)
-    await load()
-  })
-  window.addEventListener('refresh-books', load)
+  bulkStatusEl.addEventListener('change', async () => { /* front-only: tampilkan modal konfirmasi, nanti panggil API */ })
+  bulkCatBtn.addEventListener('click', async () => { /* front-only flow: tampilkan pilihan kategori, lalu simpan */ })
+  bulkDeleteBtn.addEventListener('click', async () => { /* front-only: konfirmasi hapus */ })
+  bulkClearBtn.addEventListener('click', () => { selectedIds.clear(); bulkCountEl.textContent='0'; bulkBar.classList.add('hidden'); renderList(lastBooks) })
 
   await loadCategories()
   await load()

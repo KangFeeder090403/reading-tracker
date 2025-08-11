@@ -2,17 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global tweaks */
+/* Tokens: colors & typography */
 :root {
   color-scheme: dark;
   --rt-font-base: 16px;
+  /* color tokens (dark default) */
+  --rt-bg: #0b1220;
+  --rt-card: rgba(45, 34, 58, 0.4);
+  --rt-border: rgba(180,137,5,0.3);
+  --rt-text: #e5e7eb;
+  --rt-muted: #a0aec0;
+  --rt-accent: #ae3ec3;       /* amethyst */
+  --rt-accent-2: #b48905;     /* dull gold */
 }
 html { font-size: var(--rt-font-base); }
 
-/* Theme presets */
-:root.theme-light body {
-  background: #f6f7f9;
+/* Light theme tokens */
+:root.theme-light {
+  --rt-bg: #f6f7f9;
+  --rt-card: rgba(255,255,255,0.9);
+  --rt-border: #e5e7eb;
+  --rt-text: #0f172a;
+  --rt-muted: #475569;
+  --rt-accent: #2563eb;
+  --rt-accent-2: #d97706;
 }
+/* High contrast tokens */
+:root.theme-hc {
+  --rt-bg: #000000;
+  --rt-card: #000000;
+  --rt-border: #ffffff;
+  --rt-text: #ffffff;
+  --rt-muted: #e5e7eb;
+  --rt-accent: #f59e0b;
+  --rt-accent-2: #22d3ee;
+}
+/* Sepia/night reading tokens */
+:root.theme-sepia {
+  --rt-bg: #1a1410;           /* deep brown */
+  --rt-card: rgba(58, 46, 38, 0.5);
+  --rt-border: rgba(214, 179, 94, 0.35);
+  --rt-text: #efe2cf;         /* warm paper */
+  --rt-muted: #c9b79d;
+  --rt-accent: #d69e2e;       /* warm gold */
+  --rt-accent-2: #8b5cf6;     /* soft violet */
+}
+
+/* Apply tokens */
+body { background-color: var(--rt-bg); color: var(--rt-text); }
+.card { background-color: var(--rt-card); border-color: var(--rt-border); }
+.btn-primary { color: var(--rt-accent); }
+.btn-gold { color: var(--rt-accent-2); }
+
+/* Existing theme overrides kept for compatibility */
+:root.theme-light body { background: #f6f7f9; }
 :root.theme-light .card { @apply bg-white/90 border-gray-200; }
 :root.theme-light .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-500; }
 :root.theme-light .btn-gold { @apply bg-yellow-500 text-black hover:bg-yellow-400; }
@@ -22,24 +65,35 @@ html { font-size: var(--rt-font-base); }
 :root.theme-hc .btn, :root.theme-hc .input { @apply border-2 border-white; }
 :root.theme-hc .title-vamp { @apply text-white drop-shadow-none; }
 
-/* Existing vampire vibe */
+/* Sepia background accent */
+:root.theme-sepia body {
+  background-image: radial-gradient(800px 400px at 0% 0%, rgba(214,179,94,0.10), transparent),
+                    radial-gradient(800px 400px at 100% 100%, rgba(139,92,246,0.10), transparent);
+}
+
+/* Vampire vibe backdrop (default) */
 body {
   background-image: radial-gradient(800px 400px at 0% 0%, rgba(94,37,52,0.22), transparent), radial-gradient(800px 400px at 100% 100%, rgba(39,60,75,0.18), transparent);
 }
 
 /*******************
+ Typography
+*******************/
+h1, h2, h3, .title-vamp { letter-spacing: 0.01em; }
+body { line-height: 1.6; }
+.label { letter-spacing: 0.01em; }
+
+/* Line clamp utilities */
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/*******************
  Animations & Effects
 *******************/
-.fog-layer {
-  pointer-events: none;
-  position: fixed; inset: 0;
-  background: radial-gradient(1200px 600px at 10% -10%, rgba(174,62,195,0.10), transparent),
+.fog-layer { pointer-events: none; position: fixed; inset: 0; background: radial-gradient(1200px 600px at 10% -10%, rgba(174,62,195,0.10), transparent),
               radial-gradient(900px 400px at 110% 110%, rgba(180,137,5,0.08), transparent),
-              radial-gradient(800px 300px at 50% 50%, rgba(0,0,0,0.35), transparent);
-  opacity: 0;
-  transition: opacity 500ms ease-in-out;
-  z-index: 120;
-}
+              radial-gradient(800px 300px at 50% 50%, rgba(0,0,0,0.35), transparent); opacity: 0; transition: opacity 500ms ease-in-out; z-index: 120; }
 .fog-layer.show { opacity: 1; }
 
 .vamp-fade-enter { opacity: 0; transform: scale(0.99); }

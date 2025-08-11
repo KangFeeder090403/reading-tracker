@@ -67,7 +67,15 @@ export default async function BookDetail({ params }) {
   const container = document.createElement('div')
   container.className = 'max-w-7xl mx-auto px-4 md:px-6 space-y-4'
   container.innerHTML = `
-    <a href="#/" class="btn btn-primary">← Kembali</a>
+    <div class="sticky top-0 z-20 pt-2 pb-2 -mx-4 md:-mx-6 px-4 md:px-6 bg-[var(--rt-bg)]/80 backdrop-blur border-b border-base-blue/20">
+      <nav class="text-xs text-base-light/70 flex items-center gap-2">
+        <a href="#/" class="btn btn-primary">← Back</a>
+        <span>/</span>
+        <span>Book</span>
+        <span>/</span>
+        <span class="line-clamp-1 max-w-[50vw]">${title}</span>
+      </nav>
+    </div>
 
     <div class="relative overflow-hidden rounded-lg border border-base-blue/30">
       <div class="absolute inset-0 bg-gradient-to-r from-[#140b1d] via-transparent to-[#1a1026] opacity-80"></div>

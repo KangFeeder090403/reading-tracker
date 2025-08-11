@@ -16,11 +16,13 @@ export default function SettingsModal() {
           <div class="flex items-center gap-3 mb-2">
             <button data-theme="dark" class="w-8 h-8 rounded bg-[#0b1220] border border-white/10" title="Gelap"></button>
             <button data-theme="light" class="w-8 h-8 rounded bg-white border border-black/10" title="Terang"></button>
+            <button data-theme="sepia" class="w-8 h-8 rounded" style="background:#1a1410;border:1px solid #d6b35e55" title="Sepia"></button>
             <button data-theme="hc" class="w-8 h-8 rounded bg-black border-2 border-yellow-400" title="High Contrast"></button>
           </div>
           <select id="theme" class="input w-full">
             <option value="dark">Gelap (default)</option>
             <option value="light">Terang</option>
+            <option value="sepia">Sepia (malam)</option>
             <option value="hc">High Contrast</option>
           </select>
         </div>
@@ -92,9 +94,10 @@ export default function SettingsModal() {
 
   function applyTheme(mode) {
     const root = document.documentElement
-    root.classList.remove('theme-light','theme-hc')
+    root.classList.remove('theme-light','theme-hc','theme-sepia')
     if (mode === 'light') root.classList.add('theme-light')
     else if (mode === 'hc') root.classList.add('theme-hc')
+    else if (mode === 'sepia') root.classList.add('theme-sepia')
   }
   function applyFont(px) {
     document.documentElement.style.setProperty('--rt-font-base', `${px}px`)

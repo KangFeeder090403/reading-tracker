@@ -1,6 +1,6 @@
 import { api } from '../utils/http'
 
-export default function BookCard(book, onClick) {
+export default function BookCard(book, onClick, opts = {}) {
   const {
     id,
     title,
@@ -12,13 +12,21 @@ export default function BookCard(book, onClick) {
     rating
   } = book
 
+  const { selectable = false, selected = false, onSelectToggle } = opts
+
   const authorsArr = Array.isArray(authorsIn)
     ? authorsIn
     : (authorsIn ? String(authorsIn).split(',').map(s => s.trim()).filter(Boolean) : [])
 
   const el = document.createElement('div')
-  el.className = 'card p-4 hover:bg-base-purple/50 transition-colors'
+  el.className = 'card p-4 group relative hover:bg-base-purple/50 transition-colors'
   el.innerHTML = `
+    ${selectable ? '<input type="checkbox" data-select class="absolute top-2 left-2 scale-110">' : ''}
+    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+      <button class="btn btn-primary text-xs px-2 py-1" data-act="detail">Detail</button>
+      <button class="btn btn-primary text-xs px-2 py-1" data-act="cat">Kategori</button>
+      <button class="btn btn-gold text-xs px-2 py-1" data-act="share">Share</button>
+    </div>
     <div class="flex gap-4 items-start">
       <div class="w-16 h-24 bg-base-blue/30 rounded-md flex items-center justify-center text-base-light/60">📕</div>
       <div class="flex-1">
@@ -39,10 +47,28 @@ export default function BookCard(book, onClick) {
     </div>
   `
 
+  // Selection
+  const sel = el.querySelector('[data-select]')
+  if (sel) {
+    sel.checked = !!selected
+    sel.addEventListener('click', (e) => e.stopPropagation())
+    sel.addEventListener('change', (e) => onSelectToggle?.(id, !!e.target.checked))
+  }
+
+  // Hover actions
+  el.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const act = btn.getAttribute('data-act')
+      if (act === 'detail' || act === 'cat') onClick?.(id)
+      if (act === 'share') doShare()
+    })
+  })
+
   // Click to open detail if outside quick controls
   el.addEventListener('click', (e) => {
     const target = e.target
-    if (target.closest('button')) return
+    if (target.closest('button') || target.closest('[data-select]')) return
     onClick?.(id)
   })
 
@@ -64,42 +90,24 @@ export default function BookCard(book, onClick) {
   })
 
   // Share card as image
-  el.querySelector('[data-share]').addEventListener('click', (e) => {
-    e.stopPropagation()
+  function doShare() {
     const w = 600, h = 240
     const canvas = document.createElement('canvas')
     canvas.width = w; canvas.height = h
     const ctx = canvas.getContext('2d')
-    // background
-    ctx.fillStyle = '#0b1220'
-    ctx.fillRect(0,0,w,h)
-    // frame
-    ctx.strokeStyle = '#ae3ec3'
-    ctx.lineWidth = 4
-    ctx.strokeRect(8,8,w-16,h-16)
-    // title
-    ctx.fillStyle = '#e9d5ff'
-    ctx.font = 'bold 22px Albertus Nova, sans-serif'
+    ctx.fillStyle = '#0b1220'; ctx.fillRect(0,0,w,h)
+    ctx.strokeStyle = '#ae3ec3'; ctx.lineWidth = 4; ctx.strokeRect(8,8,w-16,h-16)
+    ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 22px Albertus Nova, sans-serif'
     wrapText(ctx, title, 24, 60, w-48, 26)
-    // authors
-    ctx.fillStyle = '#cbd5e1'
-    ctx.font = '16px system-ui, sans-serif'
+    ctx.fillStyle = '#cbd5e1'; ctx.font = '16px system-ui, sans-serif'
     wrapText(ctx, authorsArr.join(', '), 24, 100, w-48, 22)
-    // status & rating
-    ctx.fillStyle = '#eab308'
-    ctx.font = 'bold 18px system-ui, sans-serif'
+    ctx.fillStyle = '#eab308'; ctx.font = 'bold 18px system-ui, sans-serif'
     ctx.fillText(`Status: ${status.toUpperCase()}${typeof rating==='number' ? '  •  ★ ' + rating + '/5' : ''}`, 24, 150)
-    // watermark
-    ctx.fillStyle = '#64748b'
-    ctx.font = '12px system-ui, sans-serif'
+    ctx.fillStyle = '#64748b'; ctx.font = '12px system-ui, sans-serif'
     ctx.fillText('Reading Tracker', 24, h-24)
-
     const url = canvas.toDataURL('image/png')
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `book-${id}.png`
-    a.click()
-  })
+    const a = document.createElement('a'); a.href = url; a.download = `book-${id}.png`; a.click()
+  }
 
   function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     const words = String(text||'').split(' ')
