@@ -4,52 +4,110 @@
 
 /* Tokens: colors & typography */
 :root {
-  color-scheme: dark;
-  --rt-font-base: 16px;
   /* color tokens (dark default) */
+  --rt-font-base: 16px;
+  /* Densitas & radius */
+  --rt-space: 1;            /* 1 = comfortable, 0.85 = compact */
+  --rt-radius: 10px;
+  --btn-px: 1rem;           /* overridden by density */
+  --btn-py: 0.5rem;
+  --input-px: 0.75rem;
+  --input-py: 0.5rem;
+
   --rt-bg: #0b1220;
-  --rt-card: rgba(45, 34, 58, 0.4);
-  --rt-border: rgba(180,137,5,0.3);
-  --rt-text: #e5e7eb;
+  /* Surface ramp for elevasi */
+  --rt-surface-1: rgba(18, 23, 41, 0.65);
+  --rt-surface-2: rgba(34, 26, 46, 0.58);
+  --rt-surface-3: rgba(45, 34, 58, 0.60);
+  --rt-card: var(--rt-surface-2);
+  /* Border strengths */
+  --rt-border-subtle: rgba(180,137,5,0.22);
+  --rt-border-strong: rgba(180,137,5,0.42);
+  --rt-border: var(--rt-border-subtle);
+  /* Slightly brighter text for dark */
+  --rt-text: #eef2f6;
   --rt-muted: #a0aec0;
-  --rt-accent: #ae3ec3;       /* amethyst */
+  /* accent as HSL components for live theming */
+  --rt-accent-h: 290;
+  --rt-accent-s: 52;
+  --rt-accent-l: 58;
+  --rt-accent: hsl(var(--rt-accent-h) var(--rt-accent-s)% var(--rt-accent-l)%);
   --rt-accent-2: #b48905;     /* dull gold */
 }
 html { font-size: var(--rt-font-base); }
+
+/* Density modes */
+:root[data-density='compact'] {
+  --rt-space: 0.85;
+  --btn-px: 0.75rem;
+  --btn-py: 0.4rem;
+  --input-px: 0.5rem;
+  --input-py: 0.4rem;
+}
 
 /* Light theme tokens */
 :root.theme-light {
   --rt-bg: #f6f7f9;
   --rt-card: rgba(255,255,255,0.9);
-  --rt-border: #e5e7eb;
+  --rt-border-subtle: #e5e7eb;
+  --rt-border-strong: #cbd5e1;
+  --rt-border: var(--rt-border-subtle);
   --rt-text: #0f172a;
   --rt-muted: #475569;
-  --rt-accent: #2563eb;
+  --rt-accent-h: 220; /* blue */
+  --rt-accent-s: 83;
+  --rt-accent-l: 56;
+  --rt-accent: hsl(var(--rt-accent-h) var(--rt-accent-s)% var(--rt-accent-l)%);
   --rt-accent-2: #d97706;
 }
 /* High contrast tokens */
 :root.theme-hc {
   --rt-bg: #000000;
   --rt-card: #000000;
+  --rt-border-subtle: #ffffff;
+  --rt-border-strong: #ffffff;
   --rt-border: #ffffff;
   --rt-text: #ffffff;
   --rt-muted: #e5e7eb;
-  --rt-accent: #f59e0b;
+  --rt-accent-h: 42; /* amber */
+  --rt-accent-s: 100;
+  --rt-accent-l: 50;
+  --rt-accent: hsl(var(--rt-accent-h) var(--rt-accent-s)% var(--rt-accent-l)%);
   --rt-accent-2: #22d3ee;
 }
 /* Sepia/night reading tokens */
 :root.theme-sepia {
   --rt-bg: #1a1410;           /* deep brown */
   --rt-card: rgba(58, 46, 38, 0.5);
-  --rt-border: rgba(214, 179, 94, 0.35);
+  --rt-border-subtle: rgba(214, 179, 94, 0.35);
+  --rt-border-strong: rgba(214, 179, 94, 0.55);
+  --rt-border: var(--rt-border-subtle);
   --rt-text: #efe2cf;         /* warm paper */
   --rt-muted: #c9b79d;
-  --rt-accent: #d69e2e;       /* warm gold */
+  --rt-accent-h: 40; /* warm gold */
+  --rt-accent-s: 70;
+  --rt-accent-l: 52;
+  --rt-accent: hsl(var(--rt-accent-h) var(--rt-accent-s)% var(--rt-accent-l)%);
   --rt-accent-2: #8b5cf6;     /* soft violet */
+}
+/* Color-blind friendly theme (blue/orange palette) */
+:root.theme-cb {
+  --rt-bg: #0e1320;
+  --rt-card: rgba(20, 24, 35, 0.6);
+  --rt-border-subtle: rgba(242,153,74,0.35);
+  --rt-border-strong: rgba(242,153,74,0.55);
+  --rt-border: var(--rt-border-subtle);
+  --rt-text: #e8edf2;
+  --rt-muted: #a6b0bf;
+  --rt-accent-h: 215; /* blue */
+  --rt-accent-s: 78;
+  --rt-accent-l: 56;
+  --rt-accent: hsl(var(--rt-accent-h) var(--rt-accent-s)% var(--rt-accent-l)%);
+  --rt-accent-2: #f2994a; /* orange */
 }
 
 /* Apply tokens */
-body { background-color: var(--rt-bg); color: var(--rt-text); }
+body { background-color: var(--rt-bg-custom, var(--rt-bg)); color: var(--rt-text); }
 .card { background-color: var(--rt-card); border-color: var(--rt-border); }
 .btn-primary { color: var(--rt-accent); }
 .btn-gold { color: var(--rt-accent-2); }
@@ -82,6 +140,8 @@ body {
 h1, h2, h3, .title-vamp { letter-spacing: 0.01em; }
 body { line-height: 1.6; }
 .label { letter-spacing: 0.01em; }
+/* Tabular numerals for KPIs */
+.font-tabular { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'lnum' 1; }
 
 /* Line clamp utilities */
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
@@ -99,6 +159,10 @@ body { line-height: 1.6; }
 .vamp-fade-enter { opacity: 0; transform: scale(0.99); }
 .vamp-fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms ease, transform 300ms ease; }
 
+/* Motion-safe: disable transitions when reduced motion enabled */
+:root[data-reduce='1'] * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }}
+
 /*******************
  Components
 *******************/
@@ -110,15 +174,36 @@ body { line-height: 1.6; }
 .label { @apply font-ui text-sm text-base-light/80; }
 .title-vamp { @apply font-gothic text-4xl md:text-5xl text-accent-dullgold drop-shadow-[0_0_6px_rgba(180,137,5,0.35)]; }
 
-hr.decor { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,137,5,0.55), transparent); margin: 1rem 0; }
+/* Overrides using variables for radius and density */
+.btn { padding: var(--btn-py) var(--btn-px); border-radius: var(--rt-radius); }
+.input { padding: var(--input-py) var(--input-px); border-radius: var(--rt-radius); border-color: var(--rt-border-subtle); }
+.card { border-radius: var(--rt-radius); background-color: var(--rt-surface-2); border-color: var(--rt-border-subtle); }
 
-/* Mobile compact helpers */
-@media (max-width: 480px) {
-  .compact-hidden { display: none !important; }
-  .compact-grid { grid-template-columns: 1fr !important; }
-  .btn { @apply px-3 py-2; }
-  .input { @apply px-2 py-2; }
-}
+/* States */
+.input:hover { border-color: var(--rt-border-strong); }
+.input:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:hover { filter: saturate(1.05); }
+
+/* Skeleton shimmer */
+.skeleton { position: relative; overflow: hidden; }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); animation: shimmer 1.2s infinite; }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* Blur-up utility for images */
+.blur-up { filter: blur(8px); transform: scale(1.03); }
+.blur-up.loaded { filter: blur(0); transform: scale(1); transition: filter 300ms ease, transform 300ms ease, opacity 300ms ease; }
 
 /* Focus styles for keyboard navigation */
 :focus-visible { outline: 2px dashed #b48905; outline-offset: 2px; }
+/* Skip link for accessibility */
+.skip-link { position: absolute; left: -9999px; top: auto; background: var(--rt-text); color: var(--rt-bg); padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.skip-link:focus { left: 8px; top: 8px; z-index: 1000; }
+
+/* Override button colors using variables to support Theme Builder */
+.btn-primary { background-color: color-mix(in oklab, var(--rt-accent) 25%, transparent) !important; color: var(--rt-accent) !important; }
+.btn-primary:hover { background-color: var(--rt-accent) !important; color: var(--rt-bg) !important; }
+.btn-gold { background-color: color-mix(in oklab, var(--rt-accent-2) 22%, transparent) !important; color: var(--rt-accent-2) !important; }
+.btn-gold:hover { background-color: var(--rt-accent-2) !important; color: var(--rt-bg) !important; }
+
+/* Inputs focus ring use accent variable */
+.input:focus { box-shadow: 0 0 0 2px color-mix(in oklab, var(--rt-accent) 45%, transparent); border-color: color-mix(in oklab, var(--rt-accent) 55%, transparent); }

@@ -9,7 +9,10 @@ export default function BookCard(book, onClick, opts = {}) {
     start_date,
     end_date,
     current_page = 0,
-    rating
+    rating,
+    google_id,
+    cover_url,
+    thumbnail
   } = book
 
   const { selectable = false, selected = false, onSelectToggle } = opts
@@ -18,34 +21,61 @@ export default function BookCard(book, onClick, opts = {}) {
     ? authorsIn
     : (authorsIn ? String(authorsIn).split(',').map(s => s.trim()).filter(Boolean) : [])
 
+  // Compute cover source with preferred order
+  const gbsById = google_id ? `https://books.google.com/books/content?id=${encodeURIComponent(google_id)}&printsec=frontcover&img=1&zoom=2&source=gbs_api` : ''
+  const coverSrc = cover_url || thumbnail || gbsById || ''
+
   const el = document.createElement('div')
-  el.className = 'card p-4 group relative hover:bg-base-purple/50 transition-colors'
+  el.className = 'card p-4 group relative overflow-hidden hover:bg-base-purple/50 transition-colors'
   el.innerHTML = `
     ${selectable ? '<input type="checkbox" data-select class="absolute top-2 left-2 scale-110">' : ''}
-    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-      <button class="btn btn-primary text-xs px-2 py-1" data-act="detail">Detail</button>
-      <button class="btn btn-primary text-xs px-2 py-1" data-act="cat">Kategori</button>
-      <button class="btn btn-gold text-xs px-2 py-1" data-act="share">Share</button>
+    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-[-4px] group-hover:translate-y-0">
+      <div class="flex items-center gap-1 bg-base-dark/60 border border-base-blue/30 rounded-full backdrop-blur px-1.5 py-1 shadow-frame">
+        <button class="w-7 h-7 rounded-full grid place-items-center text-base-light/70 hover:text-base-light hover:bg-base-dark/70" data-act="detail" title="Detail" aria-label="Detail">🔍</button>
+        <button class="w-7 h-7 rounded-full grid place-items-center text-base-light/70 hover:text-base-light hover:bg-base-dark/70" data-act="cat" title="Kategori" aria-label="Kategori">🏷️</button>
+        <button class="w-7 h-7 rounded-full grid place-items-center text-base-light/70 hover:text-base-light hover:bg-base-dark/70" data-act="share" title="Bagikan" aria-label="Bagikan">🖼️</button>
+      </div>
     </div>
     <div class="flex gap-4 items-start">
-      <div class="w-16 h-24 bg-base-blue/30 rounded-md flex items-center justify-center text-base-light/60">📕</div>
-      <div class="flex-1">
+      <div class="relative w-16 h-24 rounded-md overflow-hidden bg-base-blue/20 border border-base-blue/20 skeleton">
+        <img data-cover alt="${title?.replace(/"/g,'&quot;') || 'Sampul buku'}" class="w-full h-full object-cover opacity-0 transition-opacity duration-300 blur-up" ${coverSrc ? `src="${coverSrc}"` : ''} loading="lazy"/>
+        <div data-fallback class="absolute inset-0 grid place-items-center text-base-light/50">📕</div>
+      </div>
+      <div class="flex-1 min-w-0">
         <div class="font-ui text-base-light text-lg mb-1 line-clamp-1">${title}</div>
         <div class="text-sm text-base-light/70 line-clamp-1">${authorsArr.join(', ')}</div>
         <div class="mt-1 flex items-center gap-2 text-xs text-base-light/60">
-          <span>Status: <span class="uppercase tracking-wider">${status}</span></span>
-          ${typeof rating === 'number' ? `<span>• ⭐ ${rating}/5</span>` : ''}
+          <span class="whitespace-nowrap">Status: <span class="uppercase tracking-wider">${status}</span></span>
+          ${typeof rating === 'number' ? `<span class="whitespace-nowrap">• ⭐ ${rating}/5</span>` : ''}
         </div>
-        <div class="mt-1 text-xs text-base-light/60 compact-hidden">${start_date ? `Mulai: ${start_date}` : ''} ${end_date ? `• Selesai: ${end_date}` : ''}</div>
+        <div class="mt-1 text-xs text-base-light/60 compact-hidden truncate">${start_date ? `Mulai: ${start_date}` : ''} ${end_date ? `• Selesai: ${end_date}` : ''}</div>
         <div class="mt-2 flex items-center gap-2">
           <button class="btn btn-primary text-xs px-2 py-1" data-dec>−10</button>
           <button class="btn btn-gold text-xs px-2 py-1" data-inc>+10</button>
-          <span class="text-xs text-base-light/70">Halaman: <b data-page>${current_page}</b></span>
-          <button class="btn btn-primary text-xs ml-auto" data-share>Share</button>
+          <span class="text-xs text-base-light/70 ml-auto">Halaman: <b data-page>${current_page}</b></span>
         </div>
       </div>
     </div>
   `
+
+  // Handle cover loading/fallback
+  const imgEl = el.querySelector('[data-cover]')
+  const fb = el.querySelector('[data-fallback]')
+  const coverWrap = el.querySelector('.skeleton')
+  if (imgEl) {
+    const onLoad = () => { imgEl.classList.remove('opacity-0'); imgEl.classList.add('loaded'); fb?.classList.add('hidden'); coverWrap?.classList.remove('skeleton') }
+    const onError = () => { imgEl.classList.add('hidden'); fb?.classList.remove('hidden'); coverWrap?.classList.remove('skeleton') }
+    if (imgEl.getAttribute('src')) {
+      imgEl.addEventListener('load', onLoad)
+      imgEl.addEventListener('error', onError)
+      if (imgEl.decode) imgEl.decode().catch(()=>{})
+    } else if (gbsById) {
+      imgEl.setAttribute('src', gbsById)
+      imgEl.addEventListener('load', onLoad)
+      imgEl.addEventListener('error', onError)
+      if (imgEl.decode) imgEl.decode().catch(()=>{})
+    }
+  }
 
   // Selection
   const sel = el.querySelector('[data-select]')

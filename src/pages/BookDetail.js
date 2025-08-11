@@ -62,7 +62,11 @@ export default async function BookDetail({ params }) {
   const description = vi?.description || data.notes || ''
   const ratingGb = vi?.averageRating
   const previewLink = vi?.previewLink
-  const cover = vi?.imageLinks?.extraLarge || vi?.imageLinks?.large || vi?.imageLinks?.thumbnail
+
+  // Compute cover source:
+  const coverMeta = vi?.imageLinks?.extraLarge || vi?.imageLinks?.large || vi?.imageLinks?.thumbnail
+  const gbsById = data.google_id ? `https://books.google.com/books/content?id=${encodeURIComponent(data.google_id)}&printsec=frontcover&img=1&zoom=2&source=gbs_api` : ''
+  const coverSrc = data.cover_url || data.thumbnail || coverMeta || gbsById || ''
 
   const container = document.createElement('div')
   container.className = 'max-w-7xl mx-auto px-4 md:px-6 space-y-4'
@@ -80,7 +84,10 @@ export default async function BookDetail({ params }) {
     <div class="relative overflow-hidden rounded-lg border border-base-blue/30">
       <div class="absolute inset-0 bg-gradient-to-r from-[#140b1d] via-transparent to-[#1a1026] opacity-80"></div>
       <div class="relative p-5 md:p-7 flex flex-col md:flex-row gap-6">
-        <img src="${cover || ''}" alt="cover" class="w-40 md:w-56 h-auto rounded shadow-frame bg-base-blue/30 object-cover"/>
+        <div class="relative w-40 md:w-56 aspect-[2/3] rounded shadow-frame bg-base-blue/30 overflow-hidden skeleton">
+          <img data-cover alt="${(title||'Sampul').replace(/"/g,'&quot;')}" class="w-full h-full object-cover opacity-0 transition-opacity duration-300 blur-up" ${coverSrc ? `src="${coverSrc}"` : ''} loading="lazy"/>
+          <div data-fallback class="absolute inset-0 grid place-items-center text-base-light/50">📕</div>
+        </div>
         <div class="flex-1">
           <h1 class="font-ui text-3xl md:text-4xl text-accent-dullgold">${title}</h1>
           <p class="text-base-light/80">${authors}</p>
@@ -202,6 +209,25 @@ export default async function BookDetail({ params }) {
       </div>
     </div>
   `
+
+  // Fade-in cover and handle fallback
+  const imgEl = container.querySelector('[data-cover]')
+  const fb = container.querySelector('[data-fallback]')
+  const coverWrap = container.querySelector('.skeleton')
+  if (imgEl) {
+    const onLoad = () => { imgEl.classList.remove('opacity-0'); imgEl.classList.add('loaded'); fb?.classList.add('hidden'); coverWrap?.classList.remove('skeleton') }
+    const onError = () => { imgEl.classList.add('hidden'); fb?.classList.remove('hidden'); coverWrap?.classList.remove('skeleton') }
+    if (imgEl.getAttribute('src')) {
+      imgEl.addEventListener('load', onLoad)
+      imgEl.addEventListener('error', onError)
+      if (imgEl.decode) imgEl.decode().catch(()=>{})
+    } else if (gbsById) {
+      imgEl.setAttribute('src', gbsById)
+      imgEl.addEventListener('load', onLoad)
+      imgEl.addEventListener('error', onError)
+      if (imgEl.decode) imgEl.decode().catch(()=>{})
+    }
+  }
 
   function fmtDuration(sec) {
     if (!sec || sec <= 0) return '-'

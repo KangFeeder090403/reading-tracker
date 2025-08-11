@@ -199,6 +199,18 @@ export default async function Dashboard() {
   let timelineInstance = null
   let lastBooks = []
 
+  function emptyState() {
+    return `
+      <div class="card p-6 flex flex-col items-center justify-center text-center">
+        <div class="text-6xl mb-2">🧛‍♂️</div>
+        <div class="font-ui text-lg">Perpustakaanmu masih sunyi.</div>
+        <div class="text-sm text-base-light/70">Tambahkan buku pertama dan biarkan rak-mu terisi.</div>
+        <div class="mt-3">
+          <button class="btn btn-gold" id="cta-add">Tambah Buku</button>
+        </div>
+      </div>`
+  }
+
   function updateChips() {
     const chips = []
     const s = container.querySelector('#status').value
@@ -278,7 +290,7 @@ export default async function Dashboard() {
 
   function buildSuggestions(items) {
     const set = new Set()
-    items.forEach(b => { String(b.title||'').split(/\s+/).forEach(w => set.add(w)); String(b.authors||'').split(/[,\s]+/).forEach(w => set.add(w)) })
+    items.forEach(b => { String(b.title||'').split(/\s+/).forEach(w => set.add(w)); String(b.authors||'').split(/[\,\s]+/).forEach(w => set.add(w)) })
     return Array.from(set).filter(Boolean).slice(0,200)
   }
 
@@ -337,7 +349,9 @@ export default async function Dashboard() {
     listEl.className = viewMode==='grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-3' : 'space-y-3'
     listEl.innerHTML = ''
     if (!filtered.length) {
-      listEl.innerHTML = '<div class="text-base-light/60">Belum ada data. Tambahkan buku dengan tombol di kanan atas.</div>'
+      listEl.innerHTML = emptyState()
+      const cta = listEl.querySelector('#cta-add')
+      cta?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('open-add-modal')))
       return
     }
 
@@ -379,7 +393,7 @@ export default async function Dashboard() {
         <div class="text-2xl">✅</div>
         <div class="flex-1">
           <div class="text-xs text-base-light/70 mb-1">Buku Selesai</div>
-          <div class="text-2xl font-ui">${s.completed}</div>
+          <div class="text-2xl font-ui font-tabular">${s.completed}</div>
           <canvas id="kpi_done" height="28" class="mt-2 w-full"></canvas>
         </div>
       </div>
@@ -387,7 +401,7 @@ export default async function Dashboard() {
         <div class="text-2xl">📄</div>
         <div class="flex-1">
           <div class="text-xs text-base-light/70 mb-1">Halaman/Bulan</div>
-          <div class="text-2xl font-ui">${pagesThisMonth}</div>
+          <div class="text-2xl font-ui font-tabular">${pagesThisMonth}</div>
           <canvas id="kpi_pages" height="28" class="mt-2 w-full"></canvas>
         </div>
       </div>
@@ -395,7 +409,7 @@ export default async function Dashboard() {
         <div class="text-2xl">🔥</div>
         <div class="flex-1">
           <div class="text-xs text-base-light/70 mb-1">Streak</div>
-          <div class="text-2xl font-ui">${currentStreak} hari</div>
+          <div class="text-2xl font-ui font-tabular">${currentStreak} hari</div>
         </div>
       </div>
       <div class="card p-4 border-l-4 border-base-dark/70 flex items-center gap-3">
